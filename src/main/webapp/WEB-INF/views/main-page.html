@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Header</title>
+</head>
+<body>
+<h2>Main page</h2>
+
+<div th:if="${user != null}">
+    <p th:text="${user.login}">Имя пользователя</p> <a href="/logout" methods="Get">Log out</a>
+</div>
+<div th:unless="${user != null}">
+    <a href="/register" methods="Get">Register</a>
+    <br>
+    <a href="/login" methods="Get">Log in</a>
+</div>
+
+<br>
+
+<form th:action="@{/locations}" method="get">
+    <input type="text" name="Search" placeholder="Search..." th:value="${search}">
+    <button type="submit">Search</button>
+</form>
+
+<div th:each="location : ${locations}">
+    <form th:action="@{/deleteLocation/{userId}(userId=${user?.id ?: 0})}" method="GET">
+        <input type="hidden" name="lon" th:value="${location['lon']}"/>
+        <input type="hidden" name="lat" th:value="${location['lat']}"/>
+
+        <p>Name: <span th:text="${location['name']} "></span></p>
+        <p>Temperature: <span th:text="${location['Temperature']} + '°C'"></span></p>
+        <p>Feels like <span th:text="${location['Feels like']}"></span></p>
+        <button type="submit">Delete</button>
+    </form>
+</div>
+
+
+
+
+
+
+</body>
+</html>

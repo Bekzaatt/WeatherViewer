@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results</title>
+</head>
+<body>
+<div th:if="${user != null}">
+    <p th:text="${user.login}">Имя пользователя</p> <a href="/logout" methods="Get">Log out</a>
+</div>
+<div th:unless="${user != null}">
+    <a href="/register" methods="Get">Register</a>
+    <br>
+    <a href="/login" methods="Get">Log in</a>
+</div>
+<br>
+<form th:action="@{/locations}" th:method="GET">
+    <input type="text" name="Search" placeholder="Search..." th:value="${search}">
+    <input type="hidden" name="UserId" th:value="${user?.id ?: 0}">
+    <button type="submit">Search</button>
+</form>
+<br>
+<div th:each="location : ${locations}">
+    <form th:action="@{/addLocation}" th:method="POST">
+        <input type="hidden" name="lon" th:value="${location['lon']}">
+        <input type="hidden" name="lat" th:value="${location['lat']}">
+        <input type="hidden" name="country" th:value="${location['country']}">
+        <input type="hidden" name="name" th:value="${location['name']}">
+        <input type="hidden" name="UserId" th:value="${user?.id ?: 0}">
+        <span th:text="${search}"></span>
+        <p>Longitude: <span th:text="${location['lon']} "></span></p>
+        <p>Latitude:  <span th:text="${location['lat']}"></span></p>
+        <p>Country: <span th:text="${location['country']}"></span></p>
+        <p>Name: <span th:text="${location['name']}"></span></p>
+        <button type="submit">Add</button>
+    </form>
+</div>
+
+
+</body>
+</html>
