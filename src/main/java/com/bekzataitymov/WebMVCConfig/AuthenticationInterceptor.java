@@ -28,7 +28,6 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             }
         }
 
-
         if(sessionId == null){
             response.sendRedirect(req.getContextPath() + "/login");
             return false;
@@ -39,8 +38,9 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         if (sessions != null && sessions.getExpiresAt().isAfter(LocalDateTime.now())){
             sessionsRepository.update(sessions);
             Cookie cookie = new Cookie("session", sessions.getId());
-            cookie.setMaxAge(20);
+            cookie.setMaxAge(1800);
             response.addCookie(cookie);
+
             return true;
         } else {
             response.sendRedirect(req.getContextPath() + "/login");

@@ -5,30 +5,27 @@ import org.hibernate.NonUniqueResultException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.servlet.ModelAndView;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-//    @ExceptionHandler(HttpClientErrorException.class)
-//    public ResponseEntity<String> handleClientError(HttpClientErrorException ex) {
-//        HttpStatus httpStatus = (HttpStatus) ex.getStatusCode();
-//        String msg =ex.getMessage();
-//        return new ResponseEntity<>(msg, httpStatus);
-//    }
-//
-//    @ExceptionHandler(HttpClientErrorException.NotFound.class)
-//    public ResponseEntity<String> handleClientError(HttpClientErrorException.NotFound ex) {
-//        HttpStatus httpStatus = (HttpStatus) ex.getStatusCode();
-//        String msg =ex.getMessage();
-//        return new ResponseEntity<>("City Not found", httpStatus);
-//    }
+    @ExceptionHandler(HttpClientErrorException.class)
+    public ModelAndView handleClientError(HttpClientErrorException ex) {
+        return createErrorPage(ex.getMessage());
+    }
+    @ExceptionHandler(CityNotFoundException.class)
+    public ModelAndView handleCityNotFoundException(CityNotFoundException ex){
+        return createErrorPage("You can write only with latin letters");
+    }
 
-//    @ExceptionHandler(NonUniqueResultException.class)
-//    public ResponseEntity<String> handleNonUniqueResultException(NonUniqueResultException ex){
-//        return new ResponseEntity<>("There's two or more same locations", HttpStatus.BAD_REQUEST);
-//    }
-
+    private ModelAndView createErrorPage(String errorMessage) {
+        ModelAndView modelAndView = new ModelAndView("errors");
+        modelAndView.addObject("errors", errorMessage);
+        return modelAndView;
+    }
 
 }

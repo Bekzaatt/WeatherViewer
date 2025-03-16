@@ -3,10 +3,12 @@ package com.bekzataitymov.Controller;
 import com.bekzataitymov.Config.DatabaseConfigTest;
 import com.bekzataitymov.Config.FlywayConfigTest;
 import com.bekzataitymov.DatabaseConfig.FlywayConfig;
+import com.bekzataitymov.Entity.DTO.UserDTO;
 import com.bekzataitymov.Entity.Sessions;
 import com.bekzataitymov.Entity.User;
 import com.bekzataitymov.Repository.Interface.SessionsRepository;
 import com.bekzataitymov.Service.Interface.UserService;
+import com.bekzataitymov.Util.ModelMapper;
 import com.bekzataitymov.WebMVCConfig.WebConfig;
 import jakarta.servlet.http.Cookie;
 import org.flywaydb.core.Flyway;
@@ -70,7 +72,7 @@ class AuthenticationControllerTest {
     @Test
     void registerTest() throws Exception {
         User user = new User();
-        user.setLogin("Asylkhan");
+        user.setUsername("Asylkhan");
         user.setPassword("asyl1234");
 
         mockMvc.perform(post("/register")
@@ -80,12 +82,12 @@ class AuthenticationControllerTest {
                 .andExpect(view().name("main-page.html"));
 
 
-        User testUser = userService.find(user.getLogin(), user.getPassword(), new MockHttpServletResponse());
+        UserDTO testUser = userService.find(user.getUsername(), user.getPassword(), new MockHttpServletResponse());
         assertNotNull(testUser);
-        assertEquals("Asylkhan", testUser.getLogin());
+        assertEquals("Asylkhan", testUser.getUsername());
         assertTrue( BCrypt.checkpw("asyl1234", testUser.getPassword()));
 
-        Sessions sessions = sessionsRepository.findByUser(testUser);
+        Sessions sessions = sessionsRepository.findByUser(ModelMapper.convertDtoToEntity(testUser, User.class));
 
         assertNotNull(sessions);
         assertEquals(testUser.getId(), sessions.getUserId());
@@ -95,20 +97,20 @@ class AuthenticationControllerTest {
     @Test
     void loginTest() throws Exception {
         User user = new User();
-        user.setLogin("Asylkhan");
+        user.setUsername("Asylkhan");
         user.setPassword("asyl1234");
-        userService.save(user.getLogin(), user.getPassword(), new MockHttpServletResponse());
+        userService.save(user.getUsername(), user.getPassword(), new MockHttpServletResponse());
 
-        User testUser = userService.find(user.getLogin(), user.getPassword(), new MockHttpServletResponse());
+        UserDTO testUser = userService.find(user.getUsername(), user.getPassword(), new MockHttpServletResponse());
 
-        mockMvc.perform(post("/login").param("login", user.getLogin()).param("password", user.getPassword()))
+        mockMvc.perform(post("/login").param("login", user.getUsername()).param("password", user.getPassword()))
                 .andExpect(status().isOk()).andExpect(view().name("main-page.html"));
 
         assertNotNull(testUser);
-        assertEquals("Asylkhan", testUser.getLogin());
+        assertEquals("Asylkhan", testUser.getUsername());
         assertTrue(BCrypt.checkpw("asyl1234", testUser.getPassword()));
 
-        Sessions sessions = sessionsRepository.findByUser(testUser);
+        Sessions sessions = sessionsRepository.findByUser(ModelMapper.convertDtoToEntity(testUser, User.class));
 
         assertNotNull(sessions);
         assertEquals(testUser.getId(), sessions.getUserId());
@@ -117,13 +119,13 @@ class AuthenticationControllerTest {
     @Test
     void logoutTest() throws Exception {
         User user = new User();
-        user.setLogin("Asylkhan");
+        user.setUsername("Asylkhan");
         user.setPassword("asyl1234");
 
-        userService.save(user.getLogin(), user.getPassword(), new MockHttpServletResponse());
+        userService.save(user.getUsername(), user.getPassword(), new MockHttpServletResponse());
 
-        User testUser = userService.find(user.getLogin(), user.getPassword(), new MockHttpServletResponse());
-        Sessions sessions = sessionsRepository.findByUser(testUser);
+        UserDTO testUser = userService.find(user.getUsername(), user.getPassword(), new MockHttpServletResponse());
+        Sessions sessions = sessionsRepository.findByUser(ModelMapper.convertDtoToEntity(testUser, User.class));
         System.out.println(sessions.getId());
         mockMvc.perform(get("/logout").cookie(new Cookie("session", sessions.getId()))).andExpect(status().isOk()).andExpect(view().name("login.html"));
 
@@ -136,11 +138,11 @@ class AuthenticationControllerTest {
     @Test
     void UniqueUserExceptionTest(){
         User user = new User();
-        user.setLogin("Asylkhan");
+        user.setUsername("Asylkhan");
         user.setPassword("asyl1234");
-        userService.save(user.getLogin(), user.getPassword(),new MockHttpServletResponse());
+        userService.save(user.getUsername(), user.getPassword(),new MockHttpServletResponse());
 
-        Exception exception = assertThrows(RuntimeException.class, () -> userService.save(user.getLogin(), user.getPassword(), new MockHttpServletResponse()));
+        Exception exception = assertThrows(RuntimeException.class, () -> userService.save(user.getUsername(), user.getPassword(), new MockHttpServletResponse()));
 
         assertEquals("Попробуйте ввести другой логин или пароль", exception.getMessage());
     }

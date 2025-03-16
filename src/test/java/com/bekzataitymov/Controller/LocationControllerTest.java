@@ -90,9 +90,9 @@ public class LocationControllerTest {
     @Test
     void saveLocationTest() throws Exception {
         User user = new User();
-        user.setLogin("Asylkhan");
+        user.setUsername("Asylkhan");
         user.setPassword("asyl12334");
-        userService.save(user.getLogin(), user.getPassword(), new MockHttpServletResponse());
+        userService.save(user.getUsername(), user.getPassword(), new MockHttpServletResponse());
 
         mockMvc.perform(post("/addLocation")
                         .param("lon", "10.99")

@@ -1,13 +1,16 @@
 package com.bekzataitymov.Service.Impl;
 
+import com.bekzataitymov.Entity.DTO.UserDTO;
 import com.bekzataitymov.Entity.Locations;
 import com.bekzataitymov.Entity.Sessions;
 import com.bekzataitymov.Entity.User;
+import com.bekzataitymov.ExceptionHandler.CityNotFoundException;
 import com.bekzataitymov.Repository.Interface.LocationRepository;
 import com.bekzataitymov.Repository.Interface.SessionsRepository;
 import com.bekzataitymov.Service.Interface.LocationService;
 import com.bekzataitymov.Service.Interface.UserService;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -16,8 +19,12 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Service
@@ -55,8 +62,8 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public User getUser(String sessionsId) {
-        User user = null;
+    public UserDTO getUser(String sessionsId) {
+        UserDTO user = null;
         if(sessionsId != null) {
             Sessions sessions = sessionsRepository.findById(sessionsId);
             user = userService.findById(sessions.getUserId());
@@ -88,12 +95,12 @@ public class LocationServiceImpl implements LocationService {
         try {
             ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity,
                     new ParameterizedTypeReference<>() {});
-            System.out.println("Response code: " + response.getStatusCode());
-            System.out.println("Response body: " + response.getBody());
+
 
             return response.getBody();
-        }catch (HttpClientErrorException exception){
-            System.out.println("Exception caught: " + exception.getStatusCode());
+        }catch(HttpClientErrorException exception){
+            throw exception;
+        }catch (CityNotFoundException exception){
             throw exception;
         }
     }
@@ -106,11 +113,11 @@ public class LocationServiceImpl implements LocationService {
         for(Locations location : locations){
              lat = location.getLatitude();
              lon = location.getLongitude();
-             String url = getWeatherUrl + "?lat=" + lat + "&lon=" + lon + "&appid=" + API_KEY + "&lang=en";
+             String url = getWeatherUrl + "?lat=" + lat + "&lon=" + lon + "&appid=" + API_KEY;
              HttpEntity<Void> httpEntity = new HttpEntity<>(getHttpHeaders());
              try {
                  ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.GET, httpEntity, JsonNode.class);
-                 list.add(getWeatherType(response.getBody()));
+                 list.add(getWeatherType(response.getBody(), lat, lon));
              }catch (HttpClientErrorException exception){
                  throw exception;
              }
@@ -122,23 +129,27 @@ public class LocationServiceImpl implements LocationService {
     }
 
     @Override
-    public Map<String, Object> getWeatherType(JsonNode weather) {
+    public Map<String, Object> getWeatherType(JsonNode weather, BigDecimal lat, BigDecimal lon) {
         Map<String, Object> currentWeather = new LinkedHashMap<>();
         String descriptionFirst =  weather.get("weather").get(0).get("description").asText().substring(0, 1).toUpperCase();
         String description = weather.get("weather").get(0).get("description").asText().substring(1);
+        String icon = weather.get("weather").get(0).get("icon").toString().replace("\"", "");
+
 
         currentWeather.put("Temperature", weather.get("main").get("temp").asInt() - KELVIN_CONST);
         currentWeather.put("name", weather.get("name").asText() + ", " + weather.get("sys").get("country").asText());
         currentWeather.put("Feels like", weather.get("main").get("feels_like").asInt() - KELVIN_CONST + "°C. " +
                 descriptionFirst + description);
-        currentWeather.put("lon", weather.get("coord").get("lon").asDouble());
-        currentWeather.put("lat", weather.get("coord").get("lat").asDouble());
-
+        currentWeather.put("lon", lon);
+        currentWeather.put("lat", lat);
+        currentWeather.put("icon", icon);
         return currentWeather;
     }
 
     private HttpHeaders getHttpHeaders(){
         HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Accept-Charset", "UTF-8");
+
         httpHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
 

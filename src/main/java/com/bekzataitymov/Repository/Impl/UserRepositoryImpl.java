@@ -27,14 +27,16 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     @Transactional
-    public User find(String login, String password) {
+    public User find(String username, String password) {
         Session session = sessionFactory.getCurrentSession();
         User user = null;
-        String hql = "FROM User WHERE login = :login";
+        String hql = "FROM User WHERE username = :username";
 
         Query<User> query = session.createQuery(hql, User.class);
-        query.setParameter("login", login);
+        query.setParameter("username", username);
         user = query.uniqueResult();
+
+        System.out.println("user: " + user);
 
         if(user != null && !BCrypt.checkpw(password, user.getPassword())) {
             user = null;

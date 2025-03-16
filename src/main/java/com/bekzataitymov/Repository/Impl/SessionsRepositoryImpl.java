@@ -1,5 +1,6 @@
 package com.bekzataitymov.Repository.Impl;
 
+import com.bekzataitymov.Entity.DTO.UserDTO;
 import com.bekzataitymov.Entity.Sessions;
 import com.bekzataitymov.Entity.User;
 import com.bekzataitymov.Repository.Interface.SessionsRepository;
@@ -25,7 +26,7 @@ public class SessionsRepositoryImpl implements SessionsRepository {
         Sessions sessions = new Sessions();
 
         sessions.setUserId(user.getId());
-        sessions.setExpiresAt(now.plusSeconds(20*64*64));
+        sessions.setExpiresAt(now.plusSeconds(1800));
         session.save(sessions);
         return sessions;
     }
@@ -46,9 +47,10 @@ public class SessionsRepositoryImpl implements SessionsRepository {
         Session session = sessionFactory.getCurrentSession();
         LocalDateTime now = LocalDateTime.now();
 
-        sessions.setExpiresAt(now.plusSeconds(20));
+        sessions.setExpiresAt(now.plusSeconds(1800));
         session.update(sessions);
         session.flush();
+
         return sessions;
     }
 

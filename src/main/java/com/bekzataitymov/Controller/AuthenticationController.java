@@ -1,7 +1,9 @@
 package com.bekzataitymov.Controller;
 
+import com.bekzataitymov.Entity.DTO.UserDTO;
 import com.bekzataitymov.Entity.User;
 import com.bekzataitymov.Service.Interface.UserService;
+import com.bekzataitymov.Util.ValidationUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.attribute.UserPrincipalNotFoundException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 @Controller
 public class AuthenticationController {
@@ -22,15 +27,21 @@ public class AuthenticationController {
     @GetMapping("/register")
     public String registration(Model model){
 
-        model.addAttribute("user", new User());
+        model.addAttribute("user", new UserDTO());
         return "registration.html";
     }
 
     @PostMapping("/register")
-    public String register(@RequestParam("login") String login, @RequestParam("password")  String password,
-                           Model model, HttpServletResponse response){
-        User modelUser = userService.save(login, password, response);
-        model.addAttribute("user", modelUser);
+    public String register(@Valid @ModelAttribute("user") UserDTO user,
+                           @RequestParam("repeatPassword") String repeatPassword, Model model, HttpServletResponse response){
+
+        UserDTO userToCheck = userService.findByCredentials(user.getUsername(), user.getPassword(), response);
+        String validated = ValidationUtil.signUpValidation(user, repeatPassword, model, userToCheck);
+        if(validated != null){
+            return validated;
+        }
+        UserDTO userDTO = userService.save(user.getUsername(), user.getPassword(), response);
+        model.addAttribute("user", userDTO);
         return locationController.weathersViewer(model);
     }
 
@@ -40,10 +51,15 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public String logIn(@RequestParam("login") String login, @RequestParam("password")  String password,
+    public String logIn(@ModelAttribute("user") UserDTO userDTO,
                         Model model, HttpServletResponse response) throws UserPrincipalNotFoundException {
+        UserDTO user = userService.find(userDTO.getUsername(), userDTO.getPassword(), response);
 
-        User user = userService.find(login, password, response);
+        String validated = ValidationUtil.signInValidation(userDTO, model, user);
+        if(validated != null){
+            return validated;
+        }
+
         model.addAttribute("user", user);
         return locationController.weathersViewer(model);
     }

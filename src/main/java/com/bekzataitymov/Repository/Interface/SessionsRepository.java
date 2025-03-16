@@ -1,5 +1,6 @@
 package com.bekzataitymov.Repository.Interface;
 
+import com.bekzataitymov.Entity.DTO.UserDTO;
 import com.bekzataitymov.Entity.Sessions;
 import com.bekzataitymov.Entity.User;
 

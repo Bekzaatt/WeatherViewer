@@ -21,17 +21,9 @@ public class FlywayConfig {
     private String idType;
     @Bean
     public Flyway flyway(DataSource dataSource) throws SQLException {
-        System.out.println("Id_type: " + idType);
-
-        if(dataSource == null){
-            System.out.println("dataSource is null");
-        }
-        else {
-            System.out.println("dataSource is not null");
-        }
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource).placeholders(Map.of("id_type", idType))
-                .schemas("PUBLIC").cleanDisabled(false)
+                .schemas("public").cleanDisabled(false)
                 .locations("classpath:db/migration")
                 .baselineOnMigrate(true)
                 .createSchemas(true)

@@ -11,29 +11,27 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Id")
     private int id;
-    @NotEmpty(message = "Username should not be empty")
-    @Size(min = 2,max=255, message = "Username has to be between 2 and 255")
-    @Column(name = "Login", nullable = false)
-    private String login;
-    @Size(min = 8,max=255, message = "Password has to be greater than 6")
-    @NotEmpty(message = "Password should not be empty")
+
+    @Column(name = "Username", nullable = false)
+    private String username;
+
     @Column(name = "Password", nullable = false)
     private String password;
 
-//    public User(String login, String password) {
-//        this.login = login;
-//        this.password = password;
-//    }
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
 
     public User() {
     }
 
-    public String getLogin() {
-        return login;
+    public String getUsername() {
+        return username;
     }
 
-    public void setLogin(String login) {
-        this.login = login;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {
@@ -46,5 +44,14 @@ public class User {
 
     public int getId() {
         return id;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                '}';
     }
 }

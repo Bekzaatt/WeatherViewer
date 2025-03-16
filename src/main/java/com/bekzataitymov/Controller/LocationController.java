@@ -1,5 +1,6 @@
 package com.bekzataitymov.Controller;
 
+import com.bekzataitymov.Entity.DTO.UserDTO;
 import com.bekzataitymov.Entity.Locations;
 import com.bekzataitymov.Entity.Sessions;
 import com.bekzataitymov.Entity.User;
@@ -25,13 +26,14 @@ import java.util.Map;
 public class LocationController {
     @Autowired
     private LocationService locationService;
-
     @Autowired
     private UserService userService;
+    @Autowired
+    SessionsRepository sessionsRepository;
+
     @GetMapping({"/weather", "/"})
     public String weathersViewer(Model model){
         List<Locations> locations = locationService.findAll();
-        System.out.println("Locations from weatherViewer: " + locations);
         List<Map<String, Object>> totalLocations = null;
         if(locations != null) {
             totalLocations = locationService.getWeatherByLocations(locations);
@@ -41,10 +43,10 @@ public class LocationController {
     }
 
     @GetMapping("/locations")
-    public String findLocations(@RequestParam("Search") String name, @CookieValue(name = "session", required = false) String sessionsId,
-                           Model model) {
-        User user = locationService.getUser(sessionsId);
+    public String findLocations(@RequestParam("name") String name, @CookieValue(name = "session", required = false)
+                                    String sessionsId, Model model) {
 
+        UserDTO user = locationService.getUser(sessionsId);
         if(name == null || name.isEmpty()){
             model.addAttribute("user", user);
             return weathersViewer(model);
@@ -52,7 +54,7 @@ public class LocationController {
         List<Map<String, Object>> locations = locationService.findLocations(name);
 
         model.addAttribute("locations", locations);
-        model.addAttribute("search", name);
+        model.addAttribute("name", name);
         model.addAttribute("user", user);
 
         return "searchResult.html";
@@ -60,22 +62,23 @@ public class LocationController {
 
     @PostMapping("/addLocation")
     public String saveLocation(@RequestParam("lon") String lon,
-                                       @RequestParam("lat") String lat,
+                                       @RequestParam("lat") BigDecimal lat,
                                        @RequestParam("name") String name, @RequestParam("UserId") int id, Model model
     ){
-        Locations locations = new Locations(name, id, BigDecimal.valueOf(Double.parseDouble(lat)), BigDecimal.valueOf(Double.parseDouble(lon)));
+        Locations locations = new Locations(name, id, lat, new BigDecimal(lon));
         locationService.save(locations);
 
-        User user = userService.findById(id);
+        UserDTO user = userService.findById(id);
         model.addAttribute("user", user);
         return weathersViewer(model);
     }
 
-    @GetMapping("/deleteLocation/{userId}")
+    @GetMapping("/deleteLocation")
     public String delete(@RequestParam("lon") BigDecimal longitude, @RequestParam("lat") BigDecimal latitude,
-                         @PathVariable(value = "userId", required = false) int userId, Model model){
-        locationService.delete(longitude, latitude, userId);
-        User user = userService.findById(userId);
+                         @CookieValue(name = "session", required = false) String sessionsId, Model model){
+        Sessions sessions = sessionsRepository.findById(sessionsId);
+        locationService.delete(longitude, latitude, sessions.getUserId());
+        UserDTO user = userService.findById(sessions.getUserId());
         model.addAttribute("user", user);
 
         return weathersViewer(model);

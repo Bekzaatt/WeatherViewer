@@ -1,5 +1,5 @@
-CREATE TABLE users(
+CREATE TABLE Users(
     Id ${id_type} PRIMARY KEY,
-    Login VARCHAR(50) NOT NULL,
+    Username VARCHAR(100) NOT NULL,
     Password VARCHAR(100) NOT NULL
 );

@@ -1,10 +1,12 @@
 package com.bekzataitymov.Service.Impl;
 
+import com.bekzataitymov.Entity.DTO.UserDTO;
 import com.bekzataitymov.Entity.Sessions;
 import com.bekzataitymov.Entity.User;
 import com.bekzataitymov.Repository.Interface.SessionsRepository;
 import com.bekzataitymov.Repository.Interface.UserRepository;
 import com.bekzataitymov.Service.Interface.UserService;
+import com.bekzataitymov.Util.ModelMapper;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,28 +23,33 @@ public class UserServiceImpl implements UserService {
     private SessionsRepository sessionsRepository;
 
     @Override
-    public User save(String login, String password, HttpServletResponse response) {
-
-        User existingUser = userRepository.find(login, password);
-        if(existingUser != null){
-            throw new RuntimeException("Попробуйте ввести другой логин или пароль");
-        }
+    public UserDTO save(String username, String password, HttpServletResponse response) {
 
         User user = new User();
-        user.setLogin(login);
+        user.setUsername(username);
         user.setPassword(password);
+
         userRepository.save(user);
         Sessions sessions = sessionsRepository.save(user);
         setCookies(sessions, response);
 
-        return user;
+        return ModelMapper.convertEntityToDto(user, UserDTO.class);
     }
 
     @Override
-    public User find(String login, String password, HttpServletResponse response) throws UserPrincipalNotFoundException {
-        User user = userRepository.find(login, password);
+    public UserDTO findByCredentials(String username, String password, HttpServletResponse response) {
+        User user = userRepository.find(username, password);
+        if(user != null){
+            return ModelMapper.convertEntityToDto(userRepository.find(username, password), UserDTO.class);
+        }
+        return null;
+    }
+
+    @Override
+    public UserDTO find(String username, String password, HttpServletResponse response) throws UserPrincipalNotFoundException {
+        User user = userRepository.find(username, password);
         if (user == null){
-            throw new UserPrincipalNotFoundException("User not found");
+            return null;
         }
         Sessions sessions = sessionsRepository.findByUser(user);
 
@@ -54,18 +61,18 @@ public class UserServiceImpl implements UserService {
             sessions = sessionsRepository.save(user);
             setCookies(sessions, response);
         }
-        return user;
+        return ModelMapper.convertEntityToDto(user, UserDTO.class);
     }
 
 
     @Override
-    public User findById(int id) {
-        return userRepository.findById(id);
+    public UserDTO findById(int id) {
+
+        return ModelMapper.convertEntityToDto(userRepository.findById(id), UserDTO.class);
     }
 
     @Override
     public void logout(String sessionsId, HttpServletResponse response) {
-        System.out.println("logout method");
         if(sessionsId != null) {
             sessionsRepository.delete(sessionsId);
             Cookie cookie = new Cookie("session", sessionsId);
@@ -79,11 +86,9 @@ public class UserServiceImpl implements UserService {
 
     public void setCookies(Sessions sessions, HttpServletResponse response){
         Cookie cookie = new Cookie("session", sessions.getId());
-        cookie.setMaxAge(20 * 64 * 64);
+        cookie.setMaxAge(1800);
         cookie.setPath("/");
+        cookie.setHttpOnly(true);
         response.addCookie(cookie);
-        System.out.println("Creating cookies for sessionId: " + sessions.getId());
-        System.out.println("Max age of cookies: " + cookie.getMaxAge());
-
     }
 }

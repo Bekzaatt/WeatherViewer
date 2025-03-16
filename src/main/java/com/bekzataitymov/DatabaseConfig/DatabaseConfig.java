@@ -32,7 +32,6 @@ public class DatabaseConfig {
 
     @Bean
     public DataSource dataSource() {
-        System.out.println("From data source Method!");
 
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName(driver);

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Repository
@@ -38,8 +39,6 @@ public class LocationRepositoryImpl implements LocationRepository {
     @Override
     @Transactional
     public Locations save(Locations location) {
-        System.out.println("repository save method");
-
         Session session = sessionFactory.getCurrentSession();
         session.persist(location);
         return location;
