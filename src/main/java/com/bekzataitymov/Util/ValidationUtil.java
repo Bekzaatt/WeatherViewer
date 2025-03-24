@@ -35,7 +35,6 @@ public class ValidationUtil {
             errors.put("credentialsError", "There's no user with such credentials.");
         }
         if(!errors.isEmpty()){
-            System.out.println("errors method");
             model.addAttribute("errors", errors);
             return "login-with-errors";
         }
